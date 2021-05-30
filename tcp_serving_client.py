@@ -7,7 +7,11 @@ import socketserver
 from crdt_cart.client import ClientCartSyncronizer
 from crdt_cart.common.cart import CartItem
 
-CLIENT_STATE = ClientCartSyncronizer()
+
+SERVER_SYNC_URL = 'http://127.0.0.1:12347/sync_state'
+
+CLIENT_STATE = ClientCartSyncronizer(SERVER_SYNC_URL)
+
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
     """
@@ -20,22 +24,22 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
         # self.request is the TCP socket connected to the client
-        self.data = self.request.recv(1024).strip()
+        data = self.request.recv(1024).strip()
         print("{} wrote:".format(self.client_address[0]))
-        print(self.data)
-        if self.data.startswith(b'add'):
-            to_add = json.loads(self.data[len('add'):].strip())
+        print(data)
+        if data.startswith(b'add'):
+            to_add = json.loads(data[len('add'):].strip())
             elem = CartItem(**to_add)
             print('adiing %s to cart' % to_add)
             CLIENT_STATE.current_cart.add(elem)
             CLIENT_STATE.sync_with_server()
-        elif self.data.startswith(b'remove'):
-            to_remove = json.loads(self.data[len('remove'):].strip())
+        elif data.startswith(b'remove'):
+            to_remove = json.loads(data[len('remove'):].strip())
             elem = CartItem(**to_remove)
             print('removing %s from cart' % to_remove)
             CLIENT_STATE.current_cart.remove(elem)
             CLIENT_STATE.sync_with_server()
-        elif self.data == b'show':
+        elif data == b'show':
             self.request.sendall(str(CLIENT_STATE.current_cart.show()).encode('utf-8') + b'\n')
         self.request.sendall(b'success\n')
 

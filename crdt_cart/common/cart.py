@@ -21,6 +21,16 @@ class CartItem(object):
     def __repr__(self):
         return "CartItem(product_id=%s, product_name='%s', price=%s, quantity=%s)" % (self.product_id, self.product_name, self.price, self.quantity)
 
+    def to_json(self):
+        return {"product_id": self.product_id,
+                "product_name": self.product_name,
+                "price": self.price,
+                "quantity": self.quantity}
+
+    @classmethod
+    def from_json(cls, json_dict):
+        return cls(**json_dict)
+
 
 class ShoppingCart(object):
     def __init__(self):
@@ -28,7 +38,7 @@ class ShoppingCart(object):
         self._tombstone_set = set()
 
     def _make_id(self):
-        return uuid.uuid4()
+        return str(uuid.uuid4())
 
     def add(self, elem):
         self._set.add((self._make_id(), elem))
@@ -46,3 +56,17 @@ class ShoppingCart(object):
 
     def get_tombstone_set(self):
         return self._tombstone_set
+
+    def to_json(self):
+        # dumps shopping cart to a json serializable form
+        return {"set": [[tuple_elem[0], tuple_elem[1].to_json()] for tuple_elem in self._set],
+                "tombstone_set": [[tuple_elem[0], tuple_elem[1].to_json()] for tuple_elem in self._tombstone_set]}
+
+    @classmethod
+    def from_json(cls, json_dict):
+        loaded_set = set([(list_elem[0], CartItem.from_json(list_elem[1])) for list_elem in json_dict["set"]])
+        loaded_tombstone_set = set([(list_elem[0], CartItem.from_json(list_elem[1])) for list_elem in json_dict["tombstone_set"]])
+        result = cls()
+        result._set = loaded_set
+        result._tombstone_set = loaded_tombstone_set
+        return result
