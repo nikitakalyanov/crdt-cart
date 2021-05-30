@@ -1,0 +1,1 @@
+from crdt_cart.client.syncronizer import ClientCartSyncronizer
