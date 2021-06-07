@@ -1,4 +1,5 @@
 import json
+import os
 import socket
 import threading
 import time
@@ -8,7 +9,7 @@ from crdt_cart.client import ClientCartSyncronizer
 from crdt_cart.common.cart import CartItem
 
 
-SERVER_SYNC_URL = 'http://127.0.0.1:12347/sync_state'
+SERVER_SYNC_URL = 'http://%s:12347/sync_state' % os.environ['SERVER_HOST']
 
 CLIENT_STATE = ClientCartSyncronizer(SERVER_SYNC_URL)
 
@@ -33,15 +34,16 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             print('adiing %s to cart' % to_add)
             CLIENT_STATE.current_cart.add(elem)
             CLIENT_STATE.sync_with_server()
+            self.request.sendall(b'success\n')
         elif data.startswith(b'remove'):
             to_remove = json.loads(data[len('remove'):].strip())
             elem = CartItem(**to_remove)
             print('removing %s from cart' % to_remove)
             CLIENT_STATE.current_cart.remove(elem)
             CLIENT_STATE.sync_with_server()
+            self.request.sendall(b'success\n')
         elif data == b'show':
-            self.request.sendall(str(CLIENT_STATE.current_cart.show()).encode('utf-8') + b'\n')
-        self.request.sendall(b'success\n')
+            self.request.sendall(json.dumps(CLIENT_STATE.current_cart.show()).encode('utf-8') + b'\n')
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -49,7 +51,7 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 9999
+    HOST, PORT = "0.0.0.0", 9999
 
     # Create the server, binding to localhost on port 9999
     with ThreadedTCPServer((HOST, PORT), MyTCPHandler) as server:

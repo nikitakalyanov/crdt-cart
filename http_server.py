@@ -38,9 +38,9 @@ class MyHandler(BaseHTTPRequestHandler):
         if self.path == '/state':
             print('getting current server state')
             self.send_response(200)
-            self.send_header("Content-type", "text/html")
+            self.send_header("Content-type", "application/json")
             self.end_headers()
-            self.wfile.write(str(SERVER_STATE.current_cart.show()).encode(
+            self.wfile.write(json.dumps(SERVER_STATE.current_cart.show()).encode(
                 'utf-8'))
 
 

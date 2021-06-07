@@ -49,7 +49,8 @@ class ShoppingCart(object):
                 self._tombstone_set.add(elem_tuple)
 
     def show(self):
-        return set([elem_tuple[1] for elem_tuple in self._set if elem_tuple not in self._tombstone_set])
+        effective_set = set([elem_tuple[1] for elem_tuple in self._set if elem_tuple not in self._tombstone_set])
+        return [elem.to_json() for elem in effective_set]
 
     def get_set(self):
         return self._set

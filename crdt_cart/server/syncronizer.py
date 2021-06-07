@@ -1,4 +1,5 @@
 import json
+import os
 
 import psycopg2
 
@@ -12,7 +13,7 @@ class ServerCartSyncronizer(common.BaseCartSyncronizer):
             database="crdtcart",
             user="server",
             password="server",
-            host="127.0.0.1",
+            host=os.environ['DB_HOST'],
             port=5432,
         )
         self._db_connection.autocommit = True
