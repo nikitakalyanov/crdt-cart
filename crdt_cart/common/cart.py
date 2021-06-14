@@ -49,7 +49,9 @@ class ShoppingCart(object):
                 self._tombstone_set.add(elem_tuple)
 
     def show(self):
-        effective_set = set([elem_tuple[1] for elem_tuple in self._set if elem_tuple not in self._tombstone_set])
+        current_set = self._set.copy()
+        current_tombstone_set = self._tombstone_set.copy()
+        effective_set = set([elem_tuple[1] for elem_tuple in current_set if elem_tuple not in current_tombstone_set])
         return [elem.to_json() for elem in effective_set]
 
     def get_set(self):
@@ -60,8 +62,10 @@ class ShoppingCart(object):
 
     def to_json(self):
         # dumps shopping cart to a json serializable form
-        return {"set": [[tuple_elem[0], tuple_elem[1].to_json()] for tuple_elem in self._set],
-                "tombstone_set": [[tuple_elem[0], tuple_elem[1].to_json()] for tuple_elem in self._tombstone_set]}
+        current_set = self._set.copy()
+        current_tombstone_set = self._tombstone_set.copy()
+        return {"set": [[tuple_elem[0], tuple_elem[1].to_json()] for tuple_elem in current_set],
+                "tombstone_set": [[tuple_elem[0], tuple_elem[1].to_json()] for tuple_elem in current_tombstone_set]}
 
     @classmethod
     def from_json(cls, json_dict):

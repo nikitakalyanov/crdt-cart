@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import socket
 import threading
 import time
@@ -64,4 +65,8 @@ if __name__ == "__main__":
         # periodically sync with server
         while True:
             CLIENT_STATE.sync_with_server()
-            time.sleep(60)
+            # it is important to have variable sllep time here because the
+            # clusters of unsyncronized nodes may form if round-robin load balancing is used
+            # (i.e. same clients sync with same servers because the times are fixed)
+            # also this should be relatively small to reduce number of stale removes
+            time.sleep(0.1 * random.randint(1, 5))

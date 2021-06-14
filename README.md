@@ -2,7 +2,7 @@ some python3 CRDT shopping cart
 
 
 There are client (tcp_serving_client.py) and server (http_server.py) scripts that together form a sample shopping cart app.
-Python3.8+ is required to run, dependencies are listed in requirements.txt.
+Python3.7+ is required to run, dependencies are listed in requirements.txt.
 
 So:
 1. Setup postgres database somewhere on 5432 port (via docker, ssh port forwarding or whatever)
