@@ -29,7 +29,8 @@ current effective state (i.e. hide internal CRDT realization and show the actual
 
 
 
-Example Docker postgres setup:
+Example Docker Postgres and Nginx setup:
+```bash
 docker run -d -p 5432:5432 --name crdt-cart-postgres -e "POSTGRES_USER=server" -e "POSTGRES_PASSWORD=server" postgres:10.7-alpine
 
 # attach to db
@@ -41,3 +42,4 @@ docker exec -it crdt-cart-postgres psql -U server
 docker run --name crdt-lb -v /home/nkalyanov/crdt-cart/nginx.conf:/etc/nginx/nginx.conf:ro -v /etc/hosts:/etc/hosts:ro -d nginx
 
 # then use IP of crdt-lb docker container when launching tcp_serving_client.py
+```
