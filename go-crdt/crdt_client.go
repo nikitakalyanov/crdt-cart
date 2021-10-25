@@ -1,7 +1,7 @@
 package main
 
 const concurrency = 8
-const serverEndpoint = "http://127.0.0.1:1111"
+const serverEndpoint = "http://127.0.0.1:12347"
 
 func addProductToCart() {
 	// send request to serverEndpoint
