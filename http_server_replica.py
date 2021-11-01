@@ -1,6 +1,10 @@
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import sys
 import threading
+
+import requests
+from requests import codes
 
 from crdt_cart.server import ServerCartSyncronizer
 from crdt_cart.common.cart import ShoppingCart
@@ -22,16 +26,19 @@ class MyHandler(BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
 
             dict_client_state = json.loads(post_data)
-            client_state = ShoppingCart.from_json(dict_client_state)
-            SERVER_STATE.merge(client_state)
 
-            # async save to db
-            save_thread = threading.Thread(target=SERVER_STATE.save_to_db)
-            save_thread.daemon = True
-            save_thread.start()
+            # write to primary server
+            server_response = requests.post(self.server.primary_crdt_endpoint,
+                                            json=dict_client_state)
+            if server_response.status_code == codes.OK:
+                success = True
+            else:
+                success = False
+                print('primary server returned unexpected response code',
+                      server_response.status_code)
 
             self._set_headers()
-            self.wfile.write(json.dumps({"success": True,
+            self.wfile.write(json.dumps({"success": success,
                                          "server_state": SERVER_STATE.current_cart.to_json()}).encode('utf-8'))
 
     def do_GET(self):
@@ -42,19 +49,19 @@ class MyHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(SERVER_STATE.current_cart.show()).encode(
                 'utf-8'))
-        elif self.path == '/raw_state':
-            print('getting current raw server state')
-            self.send_response(200)
-            self.send_header("Content-type", "application/json")
-            self.end_headers()
-            self.wfile.write(
-                json.dumps(SERVER_STATE.current_cart.to_json()).encode(
-                    'utf-8'))
 
 
-def main(server_class=HTTPServer, handler_class=MyHandler, addr="localhost", port=80):
+class PrimaryAwareServer(HTTPServer):
+    def __init__(self, server_address, handler_class, primary_endpoint):
+        super(PrimaryAwareServer, self).__init__(server_address, handler_class)
+        self.primary_crdt_endpoint = primary_endpoint
+
+
+def main(server_class=PrimaryAwareServer, handler_class=MyHandler,
+         addr="localhost", port=80, primary_endpoint=None):
+
     server_address = (addr, port)
-    http = server_class(server_address, handler_class)
+    http = server_class(server_address, handler_class, primary_endpoint)
 
     print(f"Starting http server on {addr}:{port}")
     http.serve_forever()
@@ -62,4 +69,9 @@ def main(server_class=HTTPServer, handler_class=MyHandler, addr="localhost", por
 
 if __name__ == "__main__":
 
-    main(addr='0.0.0.0', port=12347)
+    args = sys.argv[1:]
+    if len(args) != 2 or args[0] != '--primary':
+        print('Incorrect usage, pass --primary primary-server:port/sync_state')
+        sys.exit(1)
+
+    main(addr='0.0.0.0', port=12347, primary_endpoint=args[1])

@@ -43,3 +43,22 @@ docker run --name crdt-lb -v /home/nkalyanov/crdt-cart/nginx.conf:/etc/nginx/ngi
 
 # then use IP of crdt-lb docker container when launching tcp_serving_client.py
 ```
+
+# How to run some comparisons
+1. Run a server on each node:
+```
+DB_HOST=172.17.0.3 python3 crdt-cart/http_server.py
+```
+2. Or run one primary server and its replicas (they will write to the primary server)
+```
+DB_HOST=172.17.0.3 python3 crdt-cart/http_server_replica.py --primary http://10.0.3.80:12347/sync_state
+```
+3. Change constants at the top of the file go-crdt/crdt_client.go and IPs if neccessary
+4. Build and run the Go client
+```
+cd go-crdt
+go build .
+./go-crdt/crdt_cart
+# or run with no extra syncing of servers
+./go-crdt/crdt_cart -no-sync
+```
