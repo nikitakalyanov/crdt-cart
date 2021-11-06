@@ -18,7 +18,7 @@ import (
 
 const concurrency = 8
 const maxRequests = int64(1000)
-const serverEndpoint = "http://172.17.0.2:12347"
+const serverEndpoint = "http://172.17.0.3:12347"
 const numServers = 5
 
 type CartItem struct {
